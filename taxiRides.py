@@ -349,14 +349,36 @@ class taxiRides():
         plotFrame['unit'] = 1
         sns.tsplot(data = plotFrame, time = binType, unit = "unit",condition = clusters, value = 'count')
         
-    def getXGBoostTrain(self)
+    def getXGBoostTrain(self):
         """
         Function: arrangeXGBoostData
         Purpose: Prepare training data for XGBoost
         Output:   
             1) self.XGBtrain - traning data for XGBoost
         """
-        pass
+        duration_train = self.trainData['trip_duration']
+        speed_trian = self.trainData['aveSpeed']
+        distance_train = self.trainData['p2pDistance']
+        ID_train = pd.get_dummies(self.trainData['vendor_id'], prefix='vi', prefix_sep='_')
+        #passenger_count_train = pd.get_dummies(self.trainData['passenger_count'], prefix='pc', prefix_sep='_')
+        #cluster_pick_train = pd.get_dummies(self.trainData['pickup_cluster'], prefix='p', prefix_sep='_')
+        #cluster_drop_train = pd.get_dummies(self.trainData['dropoff_cluster'], prefix='d', prefix_sep='_')
+        month_train = pd.get_dummies(self.trainData['DropOffMonth'], prefix='m', prefix_sep='_')
+        hour_train = pd.get_dummies(self.trainData['DropOffHour'], prefix='h', prefix_sep='_')
+        day_train = pd.get_dummies(self.trainData['DropOffDayOfWeek'], prefix='dow', prefix_sep='_')
+        
+        #XGB_train = pd.DataFrame() # crete training dataframe for XGBoost
+        self.XGB_train = pd.concat([duration_train,
+                          speed_trian,
+                          distance_train,
+                          ID_train,
+                          month_train,
+                          hour_train,
+                         day_train
+                         ], axis=1)
+               
+        print(self.XGB_train.describe())
+
     
     def learnXGBoost(self,params):
         """
@@ -569,11 +591,12 @@ if __name__ == "__main__":
      #######################################################
      # Fit XGBoost
      #######################################################
-     xgb_pars = {'min_child_weight': 1, 'eta': 0.45, 'colsample_bytree': 0.8, 
-                 'max_depth': 6,'subsample': 0.8, 'lambda': 1., 'nthread': -1,
-                 'booster' : 'gbtree', 'silent': 1,'eval_metric': 'rmse', 
-                 'objective': 'reg:linear'}
+     NYtaxi.getXGBoostTrain()
+    # xgb_pars = {'min_child_weight': 1, 'eta': 0.45, 'colsample_bytree': 0.8, 
+    #             'max_depth': 6,'subsample': 0.8, 'lambda': 1., 'nthread': -1,
+    #             'booster' : 'gbtree', 'silent': 1,'eval_metric': 'rmse', 
+    #             'objective': 'reg:linear'}
      
-     model = xgb.train(xgb_pars, dtrain, 10, watchlist, early_stopping_rounds=2,
-                       maximize=False, verbose_eval=1)
-     print('Modeling RMSLE %.5f' % model.best_score)
+    # model = xgb.train(xgb_pars, dtrain, 10, watchlist, early_stopping_rounds=2,
+     #                  maximize=False, verbose_eval=1)
+    # print('Modeling RMSLE %.5f' % model.best_score)
