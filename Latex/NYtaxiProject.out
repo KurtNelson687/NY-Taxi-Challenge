@@ -1,2 +1,5 @@
-\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
-\BOOKMARK [1][-]{section.2}{Physics-based prediction}{}% 2
+\BOOKMARK [1][-]{section.1}{Project Summary}{}% 1
+\BOOKMARK [1][-]{section.2}{Variables and Data Cleaning}{}% 2
+\BOOKMARK [1][-]{section.3}{K-means Clustering and Spatially Connectivity}{}% 3
+\BOOKMARK [1][-]{section.4}{Temporal trends}{}% 4
+\BOOKMARK [1][-]{section.5}{Gradient-boosted Tree}{}% 5

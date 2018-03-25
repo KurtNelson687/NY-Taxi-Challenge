@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import xgboost as xgb
 from geopy.distance import vincenty
 from sklearn.cluster import KMeans
 
@@ -44,72 +45,18 @@ class taxiRides():
         self.trainData['aveSpeed'] =  self.trainData[
                 'p2pDistance']/self.trainData['trip_duration'] # Compute average trip speed in miles/hr
                 
-#    def cleanTrainingData(self,minLat,maxLat,minLong,
-#                  maxLong,maxDuration,maxDistance,maxSpeed):
-#        """
-#        Function: cleanData
-#        Purpose: removes outliers from data and plots before and after histograms of
-#        duration, distance, and average speed.
-#        
-#        Inputs:
-#            1) minLat - minimum latitude allowed
-#            2) maxLat - max latitude allowed
-#            3) minLong - minimum longitude allowed
-#            4) maxLong - max longitude allowed
-#            5) maxDuration - max trip duration allowed in hr
-#            6) maxDistance - max distance allowed in miles
-#            7) maxSpeed - max speed allowed in mph
-# 
-#        Output:   
-#            1) trainData - cleaned trainData
-#        """
-#        numStart = len(self.trainData) # starting number of elments in dataframe
-#                
-#        # clean by drop off location
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.dropoff_latitude > minLat) & (self.trainData.dropoff_latitude < maxLat)]
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.dropoff_longitude > minLong) & (self.trainData.dropoff_longitude < maxLong)]
-#            
-#        # clean by pickup location
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.pickup_latitude > minLat) & (self.trainData.pickup_latitude < maxLat)]
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.pickup_longitude > minLong) & (self.trainData.pickup_longitude < maxLong)]
-#            
-#        # clean by duration
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.trip_duration < maxDuration)]
-#            
-#        # clean by max distance
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.p2pDistance < maxDistance)]
-#            
-#        # clean by average speed
-#        self.trainData = self.trainData.loc[(
-#                self.trainData.aveSpeed < maxSpeed)]
-#                    
-#        numEnd = len(self.trainData) # ending number of elments in dataframe
-#        
-#        print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-#        print((numStart-numEnd)/numStart*100, '% of the elements were removed in data cleaning')
-#        print('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-#  
+
     def cleanTrainingData(self,qLow,qHigh):
         """
         Function: cleanData
         Purpose: removes outliers from data and plots before and after histograms of
-        duration, distance, and average speed.
+        duration, distance, and average speed. Data outside the quantiles specifed by
+        qLow and qHigh are removed.
         
         Inputs:
-            1) minLat - minimum latitude allowed
-            2) maxLat - max latitude allowed
-            3) minLong - minimum longitude allowed
-            4) maxLong - max longitude allowed
-            5) maxDuration - max trip duration allowed in hr
-            6) maxDistance - max distance allowed in miles
-            7) maxSpeed - max speed allowed in mph
- 
+            1) qLow - lower quantile for data removal
+            2) qHigh - higher quantile for data removal
+    
         Output:   
             1) trainData - cleaned trainData
         """
@@ -401,11 +348,30 @@ class taxiRides():
         plotFrame.reset_index(inplace = True)
         plotFrame['unit'] = 1
         sns.tsplot(data = plotFrame, time = binType, unit = "unit",condition = clusters, value = 'count')
-                  
+        
+    def getXGBoostTrain(self)
+        """
+        Function: arrangeXGBoostData
+        Purpose: Prepare training data for XGBoost
+        Output:   
+            1) self.XGBtrain - traning data for XGBoost
+        """
+        pass
+    
+    def learnXGBoost(self,params):
+        """
+        Function: learnXGBoost
+        Purpose: Train an XGBoost model with the training data
+            1) params - model paramters for XGBoost
+        Output:   
+            1) self.XGmodel - earned model
+        """
+        pass
+        
     
 if __name__ == "__main__":
      numK = 16 # number of clusters for K-mean
-     NYtaxi = taxiRides("./dataFiles/train.csv")
+     NYtaxi = taxiRides("../dataFiles/train.csv")
      
      #######################################################
      # Remove outliers and show data statistics
@@ -478,7 +444,7 @@ if __name__ == "__main__":
      plt.figure(figsize=(8, 4))
      # plot trip distance
      ax = plt.subplot(1, 3, 1)
-     ax.set_title("Trip distance")
+     ax.set_title("Average distance")
      NYtaxi.makeHeatMap('p2pDistance')
      #y-axis
      yticks, ylabels = NYtaxi.makeBinTicks('DropOffHour',True)
@@ -491,7 +457,7 @@ if __name__ == "__main__":
 
      # plot trip duration
      ax = plt.subplot(1, 3, 2)
-     ax.set_title("Trip duration")
+     ax.set_title("Average duration")
      NYtaxi.makeHeatMap('trip_duration')
      #y-axis
      ax.set_ylabel('')
@@ -526,7 +492,7 @@ if __name__ == "__main__":
      plt.figure(figsize=(3.55, 4))
      ax = plt.subplot(2, 1, 1)
      NYtaxi.rideCountAtClusters('PickupCluster','PickUpDayOfWeek')
-     ax.set_ylabel('Pickup Count')
+     ax.set_ylabel('# of Pickups')
      ax.set_xticklabels([])
      ax.set_xlabel('')
      # Shrink current axis and move legend
@@ -537,7 +503,7 @@ if __name__ == "__main__":
 
      ax = plt.subplot(2, 1, 2)
      NYtaxi.rideCountAtClusters('DropoffCluster','DropOffDayOfWeek')
-     ax.set_ylabel('Drop-off Count')
+     ax.set_ylabel('# of Drop-offs')
      ax.set_xlabel('Day')
      #box = ax.get_position()
      #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -555,7 +521,7 @@ if __name__ == "__main__":
      
      ax = plt.subplot(2, 1, 1) # pickup plot
      NYtaxi.rideCountAtClusters('PickupCluster','PickUpHour')
-     ax.set_ylabel('Pickup Count')
+     ax.set_ylabel('# of Pickups')
      ax.set_xticklabels([])
      ax.set_xlabel('')
      # Shrink current axis and move legend
@@ -566,7 +532,7 @@ if __name__ == "__main__":
 
      ax = plt.subplot(2, 1, 2) #drop off plot
      NYtaxi.rideCountAtClusters('DropoffCluster','DropOffHour')
-     ax.set_ylabel('Drop-off Count')
+     ax.set_ylabel('# of Drop-offs')
      ax.set_xlabel('Hour')
      #box = ax.get_position()
      #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -599,3 +565,15 @@ if __name__ == "__main__":
      
      plt.tight_layout()
      plt.savefig('./Figures/JointMassCluster.pdf', format='pdf', dpi=1000)
+     
+     #######################################################
+     # Fit XGBoost
+     #######################################################
+     xgb_pars = {'min_child_weight': 1, 'eta': 0.45, 'colsample_bytree': 0.8, 
+                 'max_depth': 6,'subsample': 0.8, 'lambda': 1., 'nthread': -1,
+                 'booster' : 'gbtree', 'silent': 1,'eval_metric': 'rmse', 
+                 'objective': 'reg:linear'}
+     
+     model = xgb.train(xgb_pars, dtrain, 10, watchlist, early_stopping_rounds=2,
+                       maximize=False, verbose_eval=1)
+     print('Modeling RMSLE %.5f' % model.best_score)
